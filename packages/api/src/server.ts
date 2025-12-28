@@ -3,18 +3,29 @@ import cors from 'cors';
 import { analyzeRepository } from './analyzer';
 import { authMiddleware } from './utils/jwt';
 import { AuthService } from './services/auth.service';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
+
+// CORS for production - allow your Vercel frontend
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'https://archflow-sigma.vercel.app',
+    'https://archflow.vercel.app'
+  ],
   credentials: true
 }));
+
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     service: 'ArchFlow API',
+    environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
     version: '1.0.0'
   });
@@ -81,8 +92,8 @@ app.post('/api/analyze', authMiddleware, (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`✅ ArchFlow API running on http://localhost:${PORT}`);
-  console.log(`🔐 Auth endpoints: /api/auth/login, /api/auth/register`);
+  console.log(`🚀 ArchFlow API running on port ${PORT}`);
+  console.log(`📊 Health: https://archflow-api.onrender.com/api/health`);
 });
