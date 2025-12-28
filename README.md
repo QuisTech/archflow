@@ -7,6 +7,8 @@
 ArchFlow is an AI-assisted platform for **architecture analysis and decision support**.
 It demonstrates how modern engineering teams can automate documentation, detect architectural risk, and generate traceable recommendations—while keeping AI **observable, auditable, and constrained to the right parts of the workflow**.
 
+![ArchFlow](https://github.com/user-attachments/assets/e48ddc79-33d4-496d-a552-8f040633ffd3)
+
 ---
 
 ## ✨ Key Capabilities
