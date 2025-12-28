@@ -65,6 +65,29 @@ Each stage is observable, isolated, and designed for auditability.
 
 ---
 
+🛠️ Recent Improvements & Challenges Addressed
+
+Over the past development cycle, ArchFlow has undergone significant enhancements to improve reliability, usability, and production readiness:
+
+Improved Authentication and User Experience:
+Login flows now ensure users are prompted only when necessary, with secure, context-aware authentication for seamless access to architecture insights.
+
+Environment-Aware API Integration:
+Backend endpoints and CORS policies have been aligned for consistent behavior across environments, enhancing stability and reducing integration issues.
+
+Enhanced Observability and Documentation:
+Dashboards and insights are fully traceable and auditable, while metadata and social sharing support improve platform visibility and engagement.
+
+Robust Monorepo and Scalable Architecture:
+The codebase is structured into frontend, API, and documentation packages, supporting scalable, component-driven development and future feature expansion.
+
+Polished UX and AI Integration:
+AI-assisted recommendations remain clear, contextual, and traceable, while deterministic analysis ensures outputs are safe and auditable.
+
+These updates reflect a commitment to enterprise-grade software engineering, balancing advanced AI capabilities with maintainable, scalable architecture.
+
+---
+
 ## 🚀 Getting Started (Local Development)
 
 ```bash
