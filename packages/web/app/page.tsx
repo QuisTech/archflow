@@ -1,17 +1,20 @@
 "use client";
 
 import { BarChart3, GitBranch, Shield, Zap, Workflow, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useState, useEffect } from 'react';  // ADD THIS
-import { checkBackendHealth, startAnalysis, type HealthResponse } from './lib/api';  // ADD THIS
+import { useState, useEffect } from 'react';
+import { checkBackendHealth, startAnalysis, type HealthResponse } from './lib/api';
+import { useAuth } from './contexts/auth.context';
+import { AuthModal } from './components/auth/auth-modal';
 
 export default function Home() {
-  // ADD THESE STATE VARIABLES
+  const { user, logout } = useAuth();
   const [backendStatus, setBackendStatus] = useState<HealthResponse | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [apiDemoResult, setApiDemoResult] = useState<any>(null);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authDefaultTab, setAuthDefaultTab] = useState<'login' | 'register'>('login');
 
-  // ADD THIS useEffect TO CHECK BACKEND ON LOAD
   useEffect(() => {
     const checkApi = async () => {
       setIsChecking(true);
@@ -22,7 +25,6 @@ export default function Home() {
     checkApi();
   }, []);
 
-  // ADD THIS DEMO FUNCTION
   const runDemoAnalysis = async () => {
     setDemoError(null);
     setApiDemoResult(null);
@@ -48,7 +50,6 @@ export default function Home() {
     { name: 'mobile/app-v2', issues: 5, lastScan: '3 hours ago', language: 'Kotlin' },
   ];
 
-  // FIX 1: Architecture Recommendations (AI + Rules Engine)
   const architectureInsights = [
     {
       type: 'warning',
@@ -67,7 +68,6 @@ export default function Home() {
     },
   ];
 
-  // FIX 2: Workflow Trace Steps (Deterministic + AI)
   const workflowSteps = [
     { step: '1', name: 'Code Ingest', description: 'GitHub sync + parsing', type: 'deterministic' },
     { step: '2', name: 'Static Analysis', description: 'Dependency mapping', type: 'deterministic' },
@@ -78,7 +78,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-gray-100">
-      {/* Header with FIX 3: Enterprise Badge */}
       <header className="border-b border-gray-800">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -90,7 +89,6 @@ export default function Home() {
                   <span className="px-2 py-1 bg-blue-900/50 text-blue-300 text-xs rounded-full border border-blue-700">
                     Beta
                   </span>
-                  {/* FIX 3: Enterprise Signal */}
                   <span className="px-2 py-1 bg-green-900/30 text-green-300 text-xs rounded-full border border-green-700 flex items-center">
                     <Shield className="h-3 w-3 mr-1" /> Compliance Mode
                   </span>
@@ -98,36 +96,58 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="px-4 py-2 text-sm border border-gray-700 rounded-lg hover:bg-gray-800 transition">
-                Sign In
-              </button>
-              <button className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-medium hover:opacity-90 transition">
-                Get Started
-              </button>
+              {user ? (
+                <>
+                  <span className="text-sm text-gray-300 hidden md:inline">
+                    Welcome, {user.name}
+                  </span>
+                  <button
+                    onClick={() => logout()}
+                    className="px-4 py-2 text-sm border border-gray-700 rounded-lg hover:bg-gray-800 transition"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="px-4 py-2 text-sm border border-gray-700 rounded-lg hover:bg-gray-800 transition"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthDefaultTab('register');
+                      setShowAuthModal(true);
+                    }}
+                    className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-medium hover:opacity-90 transition"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Updated Hero Section */}
         <div className="mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             AI-Powered <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Architecture Decision Platform</span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-3xl mb-2">
+          <p className="text-xl text-sm text-gray-400 max-w-3xl mb-2">
             Automate documentation, detect tech debt, and visualize dependencies across your entire codebase.
           </p>
-          {/* Key Addition: Decision Support Language */}
           <p className="text-lg text-gray-500 max-w-3xl">
             <span className="text-blue-400">AI-driven recommendations with rationale, trade-offs, and historical context.</span>
             {' '}Built for engineering teams at scale.
           </p>
         </div>
 
-        {/* NEW: Backend API Demo Section */}
         <div className="mb-10 p-6 bg-gray-900/40 border border-gray-800 rounded-2xl">
-          <div className="flex items-center justify-between mb-4">
+          <div className="p-2 rounded-lg bg-gray-800 ${stat.color} mb-3">
             <h2 className="text-xl font-bold flex items-center">
               <Zap className="h-5 w-5 mr-2 text-yellow-400" />
               Full-Stack Backend API
@@ -135,7 +155,7 @@ export default function Home() {
             
             <div className="flex items-center space-x-3">
               {isChecking ? (
-                <span className="text-sm text-gray-400">Checking connection...</span>
+                <span className="text-sm text-sm text-gray-400">Checking connection...</span>
               ) : backendStatus ? (
                 <div className="flex items-center space-x-2">
                   <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -154,7 +174,7 @@ export default function Home() {
             </div>
           </div>
 
-          <p className="text-gray-400 mb-4">
+          <p className="text-sm text-gray-400 mb-4">
             This dashboard is now powered by a live backend API running at <code className="bg-gray-800 px-2 py-1 rounded text-sm">localhost:3001</code>.
             The API implements the hybrid AI/deterministic analysis pipeline.
           </p>
@@ -190,39 +210,36 @@ export default function Home() {
             <div className="mt-4 p-4 bg-green-900/10 border border-green-800/30 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-bold text-green-400">✅ Analysis Started Successfully</h4>
-                <span className="text-xs text-gray-400">ID: {apiDemoResult.data.analysisId}</span>
+                <span className="text-xs text-sm text-gray-400">ID: {apiDemoResult.data.analysisId}</span>
               </div>
               <pre className="text-sm text-gray-300 bg-gray-900/50 p-3 rounded overflow-x-auto">
                 {JSON.stringify(apiDemoResult, null, 2)}
               </pre>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-sm text-gray-400 mt-2">
                 This is a real API response from your Express.js backend.
               </p>
             </div>
           )}
         </div>
 
-        {/* Stats Grid + NEW Architecture Insights Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Stats Grid (2/3 width) */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat) => (
-              <div key={stat.label} className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
+              <div key={stat.label} className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
+                <div className="p-2 rounded-lg bg-gray-800 ${stat.color} mb-3">
                   <div className={`p-2 rounded-lg bg-gray-800 ${stat.color}`}>
                     {stat.icon}
                   </div>
-                  <div className="text-sm text-gray-400">Live</div>
+                  <div className="text-sm text-sm text-gray-400">Live</div>
                 </div>
-                <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                <div className="text-gray-400">{stat.label}</div>
+                <div className="text-2xl font-bold mb-1">{stat.value}</div>
+                <div className="text-sm text-gray-400">{stat.label}</div>
               </div>
             ))}
           </div>
 
-          {/* FIX 1: Architecture Insights Panel */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="p-2 rounded-lg bg-gray-800 ${stat.color} mb-3">
               <h3 className="text-lg font-bold flex items-center">
                 <AlertTriangle className="h-5 w-5 mr-2 text-amber-400" />
                 Architecture Insights
@@ -238,7 +255,7 @@ export default function Home() {
                     </div>
                     <div>
                       <p className="text-sm mb-1">{insight.text}</p>
-                      <p className="text-xs text-gray-400">Recommendation: {insight.recommendation}</p>
+                      <p className="text-xs text-sm text-gray-400">Recommendation: {insight.recommendation}</p>
                     </div>
                   </div>
                 </div>
@@ -252,14 +269,13 @@ export default function Home() {
           </div>
         </div>
 
-        {/* FIX 2: Workflow Trace Visualization */}
         <div className="mb-8 p-6 bg-gray-900/30 border border-gray-800 rounded-2xl">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold flex items-center">
               <Workflow className="h-5 w-5 mr-2 text-blue-400" />
               Analysis Pipeline
             </h2>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-sm text-gray-400">
               Last workflow run: <span className="text-green-400">5 min ago</span>
             </div>
           </div>
@@ -271,7 +287,7 @@ export default function Home() {
                 </div>
                 <div className="text-center">
                   <div className="font-medium text-sm">{step.name}</div>
-                  <div className="text-xs text-gray-400 mt-1">{step.description}</div>
+                  <div className="text-xs text-sm text-gray-400 mt-1">{step.description}</div>
                   <div className={`text-xs mt-1 px-2 py-1 rounded-full ${step.type === 'ai' ? 'bg-purple-900/30 text-purple-300' : 'bg-gray-800 text-gray-300'}`}>
                     {step.type === 'ai' ? 'AI Synthesis' : 'Deterministic'}
                   </div>
@@ -282,7 +298,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-          {/* Key Message */}
           <div className="mt-6 p-4 bg-blue-900/20 rounded-lg border border-blue-800/30">
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 text-blue-400 mr-2" />
@@ -293,13 +308,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Existing Demo Dashboard Area (Keep as is) */}
         <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Repository Analysis Dashboard</h2>
             <div className="flex items-center space-x-2 text-sm">
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-gray-400">Connected to GitHub • Audit logs enabled</span>
+              <span className="text-sm text-gray-400">Connected to GitHub • Audit logs enabled</span>
             </div>
           </div>
 
@@ -323,7 +337,7 @@ export default function Home() {
                     {repo.issues} issue{repo.issues !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <div className="text-gray-400">{repo.lastScan}</div>
+                <div className="text-sm text-gray-400">{repo.lastScan}</div>
               </div>
             ))}
           </div>
@@ -332,7 +346,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold mb-2">Ready to analyze your codebase?</h3>
-                <p className="text-gray-400">Connect your GitHub account to start your first architecture analysis.</p>
+                <p className="text-sm text-gray-400">Connect your GitHub account to start your first architecture analysis.</p>
               </div>
               <button className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-medium hover:opacity-90 transition">
                 Connect GitHub
@@ -341,7 +355,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Feature Highlights */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { title: 'Automated Documentation', desc: 'Generate architecture docs from code analysis', color: 'from-blue-500 to-cyan-500' },
@@ -351,7 +364,7 @@ export default function Home() {
             <div key={feature.title} className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
               <div className={`h-1 w-12 rounded-full bg-gradient-to-r ${feature.color} mb-4`} />
               <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-              <p className="text-gray-400">{feature.desc}</p>
+              <p className="text-sm text-gray-400">{feature.desc}</p>
             </div>
           ))}
         </div>
@@ -367,6 +380,12 @@ export default function Home() {
           <p className="mt-2 text-gray-600">Data residency: EU/US • SOC2 compliant • Audit logs enabled</p>
         </div>
       </footer>
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        defaultTab={authDefaultTab}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "./contexts/auth.context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
     title: "ArchFlow — AI-Powered Architecture Decision Platform",
     description: "AI-assisted platform for architecture analysis and decision support",
     images: ["https://archflow-sigma.vercel.app/og-image.png"],
-    creator: "@quis_tech", // Optional: add your Twitter handle if you have one
+    creator: "@quis_tech",
   },
   
   // Additional metadata
@@ -63,14 +64,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* You can add additional head tags here if needed */}
         <link rel="icon" href="/favicon.ico" />
         <meta name="theme-color" content="#000000" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

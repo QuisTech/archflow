@@ -1,0 +1,11 @@
+  const runDemoAnalysis = async () => {
+    setDemoError(null);
+    setApiDemoResult(null);
+    try {
+      const token = user ? (localStorage.getItem('archflow_token') || null) : null;
+      const result = await startAnalysis('https://github.com/QuisTech/archflow', token);
+      setApiDemoResult(result);
+    } catch (error) {
+      setDemoError(error instanceof Error ? error.message : 'Analysis failed');
+    }
+  };
