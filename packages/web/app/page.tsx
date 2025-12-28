@@ -26,8 +26,15 @@ export default function Home() {
   }, []);
 
   const runDemoAnalysis = async () => {
+    if (!user) {
+      setAuthDefaultTab('login');
+      setShowAuthModal(true);
+      return;
+    }
+
     setDemoError(null);
     setApiDemoResult(null);
+
     try {
       const result = await startAnalysis('https://github.com/QuisTech/archflow');
       setApiDemoResult(result);
