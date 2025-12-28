@@ -175,7 +175,7 @@ export default function Home() {
           </div>
 
           <p className="text-sm text-gray-400 mb-4">
-            This dashboard is now powered by a live backend API running at <code className="bg-gray-800 px-2 py-1 rounded text-sm">localhost:3001</code>.
+            This dashboard is now powered by a live backend API running at <code className="bg-gray-800 px-2 py-1 rounded text-sm">https://archflow-api.onrender.com</code>.
             The API implements the hybrid AI/deterministic analysis pipeline.
           </p>
 
