@@ -1,39 +1,6 @@
-"use client";
-
 import { BarChart3, GitBranch, Shield, Zap, Workflow, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useState, useEffect } from 'react';  // ADD THIS
-import { checkBackendHealth, startAnalysis, type HealthResponse } from './lib/api';  // ADD THIS
 
 export default function Home() {
-  // ADD THESE STATE VARIABLES
-  const [backendStatus, setBackendStatus] = useState<HealthResponse | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-  const [apiDemoResult, setApiDemoResult] = useState<any>(null);
-  const [demoError, setDemoError] = useState<string | null>(null);
-
-  // ADD THIS useEffect TO CHECK BACKEND ON LOAD
-  useEffect(() => {
-    const checkApi = async () => {
-      setIsChecking(true);
-      const status = await checkBackendHealth();
-      setBackendStatus(status);
-      setIsChecking(false);
-    };
-    checkApi();
-  }, []);
-
-  // ADD THIS DEMO FUNCTION
-  const runDemoAnalysis = async () => {
-    setDemoError(null);
-    setApiDemoResult(null);
-    try {
-      const result = await startAnalysis('https://github.com/QuisTech/archflow');
-      setApiDemoResult(result);
-    } catch (error) {
-      setDemoError(error instanceof Error ? error.message : 'Analysis failed');
-    }
-  };
-
   const stats = [
     { label: 'Repos Analyzed', value: '42', icon: <GitBranch className="h-5 w-5" />, color: 'text-blue-400' },
     { label: 'Tech Debt Score', value: '78/100', icon: <BarChart3 className="h-5 w-5" />, color: 'text-green-400' },
@@ -50,18 +17,18 @@ export default function Home() {
 
   // FIX 1: Architecture Recommendations (AI + Rules Engine)
   const architectureInsights = [
-    {
-      type: 'warning',
+    { 
+      type: 'warning', 
       text: 'Auth-service is a central dependency (risk: cascading failures)',
       recommendation: 'Implement circuit breaker pattern'
     },
-    {
-      type: 'success',
+    { 
+      type: 'success', 
       text: 'Frontend is well-isolated from backend changes',
       recommendation: 'Continue with current microservice boundaries'
     },
-    {
-      type: 'suggestion',
+    { 
+      type: 'suggestion', 
       text: 'Consider event-driven messaging for payment-service (latency hotspot)',
       recommendation: 'Evaluate Kafka vs RabbitMQ for async processing'
     },
@@ -123,83 +90,6 @@ export default function Home() {
             <span className="text-blue-400">AI-driven recommendations with rationale, trade-offs, and historical context.</span>
             {' '}Built for engineering teams at scale.
           </p>
-        </div>
-
-        {/* NEW: Backend API Demo Section */}
-        <div className="mb-10 p-6 bg-gray-900/40 border border-gray-800 rounded-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold flex items-center">
-              <Zap className="h-5 w-5 mr-2 text-yellow-400" />
-              Full-Stack Backend API
-            </h2>
-            
-            <div className="flex items-center space-x-3">
-              {isChecking ? (
-                <span className="text-sm text-gray-400">Checking connection...</span>
-              ) : backendStatus ? (
-                <div className="flex items-center space-x-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-sm text-green-400">
-                    Connected (v{backendStatus.version})
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                  <span className="text-sm text-red-400">
-                    Backend offline
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <p className="text-gray-400 mb-4">
-            This dashboard is now powered by a live backend API running at <code className="bg-gray-800 px-2 py-1 rounded text-sm">localhost:3001</code>.
-            The API implements the hybrid AI/deterministic analysis pipeline.
-          </p>
-
-          <div className="flex flex-col md:flex-row gap-4">
-            <button
-              onClick={runDemoAnalysis}
-              disabled={!backendStatus}
-              className={`px-4 py-3 rounded-lg font-medium transition ${
-                backendStatus 
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90' 
-                  : 'bg-gray-800 cursor-not-allowed'
-              }`}
-            >
-              Test Hybrid Analysis API
-            </button>
-            
-            <button
-              onClick={() => checkBackendHealth().then(setBackendStatus)}
-              className="px-4 py-3 border border-gray-700 rounded-lg hover:bg-gray-800 transition"
-            >
-              Re-check Connection
-            </button>
-          </div>
-
-          {demoError && (
-            <div className="mt-4 p-4 bg-red-900/20 border border-red-800/30 rounded-lg">
-              <p className="text-red-300">Error: {demoError}</p>
-            </div>
-          )}
-
-          {apiDemoResult && (
-            <div className="mt-4 p-4 bg-green-900/10 border border-green-800/30 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-bold text-green-400">✅ Analysis Started Successfully</h4>
-                <span className="text-xs text-gray-400">ID: {apiDemoResult.data.analysisId}</span>
-              </div>
-              <pre className="text-sm text-gray-300 bg-gray-900/50 p-3 rounded overflow-x-auto">
-                {JSON.stringify(apiDemoResult, null, 2)}
-              </pre>
-              <p className="text-xs text-gray-400 mt-2">
-                This is a real API response from your Express.js backend.
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Stats Grid + NEW Architecture Insights Panel */}
