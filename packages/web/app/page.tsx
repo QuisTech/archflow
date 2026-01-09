@@ -18,6 +18,9 @@ export default function Home() {
   const [demoError, setDemoError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authDefaultTab, setAuthDefaultTab] = useState<'login' | 'register'>('login');
+  const [userGeminiKey, setUserGeminiKey] = useState('');
+  const [targetRepoUrl, setTargetRepoUrl] = useState('https://github.com/QuisTech/archflow');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     const checkApi = async () => {
@@ -29,21 +32,24 @@ export default function Home() {
     checkApi();
   }, []);
 
-  const runDemoAnalysis = async () => {
+  const runAnalysis = async () => {
     if (!user) {
       setAuthDefaultTab('login');
       setShowAuthModal(true);
       return;
     }
 
+    setIsAnalyzing(true);
     setDemoError(null);
     setApiDemoResult(null);
 
     try {
-      const result = await startAnalysis('https://github.com/QuisTech/archflow');
+      const result = await startAnalysis(targetRepoUrl, undefined, userGeminiKey);
       setApiDemoResult(result);
     } catch (error) {
       setDemoError(error instanceof Error ? error.message : 'Analysis failed');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -107,6 +113,16 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="relative group hidden lg:block">
+                <input
+                  placeholder="Google API Key (Optional)"
+                  className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-full pl-9 pr-4 py-1.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-64 transition-all"
+                  type="password"
+                  value={userGeminiKey}
+                  onChange={(e) => setUserGeminiKey(e.target.value)}
+                />
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+              </div>
               {user ? (
                 <>
                   <span className="text-sm text-gray-300 hidden md:inline">
@@ -191,14 +207,14 @@ export default function Home() {
 
           <div className="flex flex-col md:flex-row gap-4">
             <button
-              onClick={runDemoAnalysis}
-              disabled={!backendStatus}
-              className={`px-4 py-3 rounded-lg font-medium transition ${backendStatus
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90'
-                  : 'bg-gray-800 cursor-not-allowed'
+              onClick={runAnalysis}
+              disabled={!backendStatus || isAnalyzing}
+              className={`px-4 py-3 rounded-lg font-medium transition ${backendStatus && !isAnalyzing
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90'
+                : 'bg-gray-800 cursor-not-allowed'
                 }`}
             >
-              Test Hybrid Analysis API
+              {isAnalyzing ? 'Running Analysis...' : 'Analyze Current Repository'}
             </button>
 
             <button
@@ -216,17 +232,39 @@ export default function Home() {
           )}
 
           {apiDemoResult && (
-            <div className="mt-4 p-4 bg-green-900/10 border border-green-800/30 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-bold text-green-400">✅ Analysis Started Successfully</h4>
-                <span className="text-xs text-gray-400">ID: {apiDemoResult.data.analysisId}</span>
+            <div className="mt-4 p-5 bg-slate-900/50 border border-indigo-500/30 rounded-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="font-bold text-indigo-400 text-lg flex items-center">
+                    <Zap className="h-5 w-5 mr-2" />
+                    Analysis Complete: {apiDemoResult.data.projectName}
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">{apiDemoResult.data.repository}</p>
+                </div>
+                <div className="text-right">
+                  <span className="px-2 py-1 bg-indigo-900/30 text-indigo-300 text-[10px] rounded uppercase font-bold border border-indigo-700/50">
+                    {apiDemoResult.data.ai_insights?.complexity} Complexity
+                  </span>
+                </div>
               </div>
-              <pre className="text-sm text-gray-300 bg-gray-900/50 p-3 rounded overflow-x-auto">
-                {JSON.stringify(apiDemoResult, null, 2)}
-              </pre>
-              <div className="mt-2 text-xs text-gray-400">
-                <p>Provider: {apiDemoResult.data.ai_insights?.provider || 'Unknown'}</p>
-                <p>Confidence: {apiDemoResult.data.ai_insights?.confidence}</p>
+
+              <div className="space-y-3">
+                <div className="bg-black/40 p-3 rounded-lg border border-gray-800">
+                  <h5 className="text-xs font-bold text-gray-300 uppercase mb-2">AI Insights</h5>
+                  <ul className="space-y-1">
+                    {apiDemoResult.data.recommendations?.map((rec: string, i: number) => (
+                      <li key={i} className="text-sm text-gray-300 flex items-start">
+                        <span className="mr-2 mt-1 h-1 w-1 rounded-full bg-indigo-500 shrink-0" />
+                        {rec}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between text-[10px] text-gray-500 uppercase font-bold tracking-wider">
+                <span>Provider: {apiDemoResult.data.ai_insights?.provider}</span>
+                <span>Confidence: {(apiDemoResult.data.ai_insights?.confidence * 100).toFixed(0)}%</span>
               </div>
             </div>
           )}
@@ -256,13 +294,32 @@ export default function Home() {
           <RepoList repos={recentAnalyses} />
 
           <div className="mt-8 p-6 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-800/30">
-            <div className="flex flex-col md:flex-row items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold mb-2">Ready to analyze your codebase?</h3>
-                <p className="text-sm text-gray-400">Connect your GitHub account to start your first architecture analysis.</p>
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2">Analyze Any Codebase</h3>
+                <p className="text-sm text-gray-400 mb-4">Enter a GitHub repository URL to trigger a deep architectural audit using Google Gemini.</p>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="https://github.com/username/repo"
+                    className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-4 focus:outline-none focus:border-blue-500 transition-all text-gray-200"
+                    value={targetRepoUrl}
+                    onChange={(e) => setTargetRepoUrl(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center">
+                    <div className="flex items-center space-x-2 px-3 py-1 bg-blue-900/30 border border-blue-700/50 rounded-lg text-[10px] text-blue-300 uppercase tracking-widest font-bold">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse mr-1" />
+                      Live Mode
+                    </div>
+                  </div>
+                </div>
               </div>
-              <button className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-medium hover:opacity-90 transition">
-                Connect GitHub
+              <button
+                onClick={runAnalysis}
+                disabled={!backendStatus || isAnalyzing}
+                className="w-full lg:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold hover:opacity-90 transition shadow-lg shadow-blue-500/20 disabled:opacity-50"
+              >
+                {isAnalyzing ? 'Analyzing...' : 'Analyze Repository'}
               </button>
             </div>
           </div>

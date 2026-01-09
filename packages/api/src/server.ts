@@ -84,27 +84,34 @@ app.get('/api/auth/me', authMiddleware, async (req: any, res) => {
   }
 });
 
-app.post('/api/analyze', authMiddleware, (req, res) => {
+app.post('/api/analyze', authMiddleware, async (req, res) => {
   const { repoUrl } = req.body;
+  const customGeminiKey = req.header('X-Gemini-API-Key');
+
+  console.log(`[API] Analysis request for: ${repoUrl}`);
+  if (customGeminiKey) {
+    console.log('[API] Using user-provided Gemini API Key');
+  }
 
   if (!repoUrl) {
     return res.status(400).json({ error: 'Repository URL is required' });
   }
 
-  res.json({
-    success: true,
-    message: 'Analysis started',
-    data: {
-      repoUrl,
-      analysisId: 'demo-' + Date.now(),
-      status: 'queued',
-      estimatedCompletion: '30 seconds'
-    }
-  });
+  try {
+    const report = await analyzeRepository(repoUrl, customGeminiKey);
+    res.json({
+      success: true,
+      message: 'Analysis completed',
+      data: report
+    });
+  } catch (error: any) {
+    console.error(`[API] Analysis failed: ${error.message}`);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`🚀 ArchFlow API running on port ${PORT}`);
+  console.log(`🚀 ArchFlow API (v4) running on port ${PORT}`);
   console.log(`📊 Health: https://archflow-api.onrender.com/api/health`);
 });

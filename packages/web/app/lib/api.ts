@@ -1,8 +1,5 @@
-// ArchFlow API Client
 const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-
-  // If we are in a browser and no env var is set, try to guess the local API location
+  // If we are in the browser, always check the current location first
   if (typeof window !== 'undefined') {
     const { hostname } = window.location;
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
@@ -10,11 +7,12 @@ const getBaseUrl = () => {
     }
   }
 
-  return 'https://archflow-api.onrender.com';
+  // Fallback to environment variable or production
+  return process.env.NEXT_PUBLIC_API_URL || 'https://archflow-api.onrender.com';
 };
 
 const API_BASE_URL = getBaseUrl();
-console.log('[ArchFlow] Using API_BASE_URL:', API_BASE_URL);
+console.log('[ArchFlow] API Client initialized. BASE_URL:', API_BASE_URL);
 
 // Get auth token from localStorage (for demo)
 const getAuthToken = () => {
@@ -73,8 +71,8 @@ export async function checkBackendHealth(): Promise<HealthResponse | null> {
   }
 }
 
-// UPDATED: Accept optional token parameter
-export async function startAnalysis(repoUrl: string, token?: string): Promise<AnalysisResponse> {
+// UPDATED: Accept optional token and geminiKey parameters
+export async function startAnalysis(repoUrl: string, token?: string, geminiKey?: string): Promise<AnalysisResponse> {
   const authToken = token || getAuthToken();
 
   try {
@@ -82,7 +80,8 @@ export async function startAnalysis(repoUrl: string, token?: string): Promise<An
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...(geminiKey ? { 'X-Gemini-API-Key': geminiKey } : {})
       },
       body: JSON.stringify({ repoUrl }),
     });
