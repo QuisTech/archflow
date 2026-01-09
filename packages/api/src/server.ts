@@ -9,21 +9,32 @@ dotenv.config();
 
 const app = express();
 
-// CORS for production - allow your Vercel frontend
+// Flexible CORS for development and specific production origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://archflow-sigma.vercel.app',
+  'https://archflow.vercel.app'
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://archflow-sigma.vercel.app',
-    'https://archflow.vercel.app'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://192.168.')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     service: 'ArchFlow API',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
@@ -34,11 +45,11 @@ app.get('/api/health', (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
-    
+
     const result = await AuthService.register({ email, password, name });
     res.json(result);
   } catch (error: any) {
@@ -49,11 +60,11 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
-    
+
     const result = await AuthService.login({ email, password });
     res.json(result);
   } catch (error: any) {
@@ -75,7 +86,7 @@ app.get('/api/auth/me', authMiddleware, async (req: any, res) => {
 
 app.post('/api/analyze', authMiddleware, (req, res) => {
   const { repoUrl } = req.body;
-  
+
   if (!repoUrl) {
     return res.status(400).json({ error: 'Repository URL is required' });
   }
