@@ -4,7 +4,7 @@ import path from 'path';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest, AuthResponse, User } from '../types/auth';
 
-const DB_PATH = path.join(process.cwd(), 'users.json');
+const DB_PATH = path.join(__dirname, '..', '..', 'users.json');
 
 interface UserEntry extends User {
   password: string;
@@ -14,23 +14,39 @@ export class AuthService {
   private static loadUsers(): Map<string, UserEntry> {
     try {
       if (!fs.existsSync(DB_PATH)) {
+        console.log(`[Auth] Database not found at ${DB_PATH}, starting empty.`);
         return new Map();
       }
       const data = fs.readFileSync(DB_PATH, 'utf8');
+      if (!data || data.trim() === '') {
+        console.warn(`[Auth] Database file is empty at ${DB_PATH}`);
+        return new Map();
+      }
       const parsed = JSON.parse(data);
       return new Map(Object.entries(parsed));
     } catch (error) {
-      console.error('Failed to load users:', error);
+      console.error('[Auth] Failed to load users:', error);
+      // Return empty only if file doesn't exist or is totally corrupt. 
+      // In a real app we might want to backup/restore here.
       return new Map();
     }
   }
 
   private static saveUsers(users: Map<string, UserEntry>) {
     try {
+      if (users.size === 0 && fs.existsSync(DB_PATH)) {
+        // Caution: Don't overwrite an existing file with nothing unless we really want to.
+        // This is a common bug point during crashes.
+        const currentData = fs.readFileSync(DB_PATH, 'utf8');
+        if (currentData.length > 2) {
+          console.warn('[Auth] Attempted to save empty user map over non-empty file. Aborting save for safety.');
+          return;
+        }
+      }
       const obj = Object.fromEntries(users);
       fs.writeFileSync(DB_PATH, JSON.stringify(obj, null, 2), 'utf8');
     } catch (error) {
-      console.error('Failed to save users:', error);
+      console.error('[Auth] Failed to save users:', error);
     }
   }
 
